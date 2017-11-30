@@ -1,30 +1,30 @@
-package android.conflicts;
+package fr.cnrs.i3s.sparks.composition.android.conflicts;
 
 import spoon.Launcher;
 import spoon.processing.Processor;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class LambdaLauncher {
 
-    static String[] inputs = {
-            "/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/export/format/GoogleFitData.java"
-    };
+
     public static void main(String[] args) throws Exception {
-        for (String input : inputs) {
-            applyOn(input);
-        }
+        applyOn("/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/export/format/");
     }
 
     private static void applyOn(String inputPath) {
-        applyProcs(inputPath, Arrays.asList(new IGSInliner()), "target/spooned"); // good example with export/format/GoogleFitData.java that has a myDb at null and uses IGS
-        //applyProcs(inputPath, Arrays.asList(new MyHMUFixer()), "target/spooned");
-       // applyProcs(inputPath, Arrays.asList(new MyHMUFixer(),new AddLambda()), "target/spooned");
-        //applyProcs(inputPath, Arrays.asList(), "target/base");
+        IGSInliner igsInliner = new IGSInliner();
+        IGSInlinerPostCondition igsInlinerPostCondition = new IGSInlinerPostCondition(igsInliner.getIgsToInvocationsMap());
+        applyProcs(inputPath, Arrays.asList(igsInliner, igsInlinerPostCondition), "target/spooned");
+
+        /*
+        applyProcs(inputPath, Arrays.asList(new AddNPGuard(), new IGSInliner()), "target/spooned-GI");
+        applyProcs(inputPath, Arrays.asList(new IGSInliner(), new AddNPGuard()), "target/spooned-IG");
+        */
     }
+
 
 
     private static void applyProcs(String inputPath, List<Processor> processors, String outputPath) {
