@@ -130,11 +130,10 @@ public class IGSInliner extends AbstractProcessor<CtClass> {
 
                 CtParameter parameter = (CtParameter) getterOrSetterMethod.getParameters().get(0);
 
-
                 UUID uuid = UUID.randomUUID();
                 CtVariable newVariable = getFactory().createLocalVariable();
                 newVariable.setType(parameter.getType());
-                newVariable.setSimpleName("_$_" + uuid.toString());
+                newVariable.setSimpleName("_$_" + uuid.toString().replaceAll("-", "_"));
 
                 parameter.setSimpleName(newVariable.getSimpleName());
 
@@ -151,7 +150,7 @@ public class IGSInliner extends AbstractProcessor<CtClass> {
                 }
                    // shouldBeModified.replace(ctInvocation);
 
-
+                /*
                 List<CtFieldWrite> whereToInjectParameter = getterOrSetterMethod.getElements(new AbstractFilter<CtFieldWrite>() {
                     @Override
                     public boolean matches(CtFieldWrite element) {
@@ -172,6 +171,16 @@ public class IGSInliner extends AbstractProcessor<CtClass> {
                     ctInvocation.replace(getterOrSetterMethod.getBody().getStatements());
                     // shouldBeModified.replace(ctInvocation);
                 }
+*/
+
+
+                for (CtInvocation ctInvocation : entry.getValue()) {
+                    newVariable.setDefaultExpression((CtExpression) ctInvocation.getArguments().get(0));
+                    ctInvocation.insertBefore((CtStatement) newVariable);
+                    ctInvocation.replace(getterOrSetterMethod.getBody().getStatements());
+                    // shouldBeModified.replace(ctInvocation);
+                }
+               // newVariable.setDefaultExpression()
 
 
 
