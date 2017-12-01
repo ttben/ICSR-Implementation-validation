@@ -11,23 +11,35 @@ public class LambdaLauncher {
 
 
     public static void main(String[] args) throws Exception {
-        applyOn("/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/export/format/");
+        applyOn("/Users/benjaminbenni/Work/interference/src/main/resources/DataTypeField.java");
+
+//        applyOn("/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/export/format/GoogleFitData.java");
     }
 
     private static void applyOn(String inputPath) {
         IGSInliner igsInliner = new IGSInliner();
-        IGSInlinerPostCondition igsInlinerPostCondition = new IGSInlinerPostCondition(igsInliner.getIgsToInvocationsMap());
-        applyProcs(inputPath, Arrays.asList(igsInliner, igsInlinerPostCondition), "target/spooned");
+        IGSInlinerPostCondition igsInlinerPostCondition = new IGSInlinerPostCondition(igsInliner.mapsSetterToTheirInlines);
+
+        //applyProcs(inputPath, Arrays.asList(igsInliner, new AddNPGuard(),igsInlinerPostCondition), "target/spooned");
+        applyProcs(inputPath, Arrays.asList(igsInliner, new AddNPGuard(), igsInlinerPostCondition), "target/spooned");
+        applyProcs(inputPath, Arrays.asList(new AddNPGuard(), igsInliner, igsInlinerPostCondition), "target/spooned");
 
         /*
         applyProcs(inputPath, Arrays.asList(new AddNPGuard(), new IGSInliner()), "target/spooned-GI");
         applyProcs(inputPath, Arrays.asList(new IGSInliner(), new AddNPGuard()), "target/spooned-IG");
         */
+
     }
 
 
-
     private static void applyProcs(String inputPath, List<Processor> processors, String outputPath) {
+        System.out.print("Order of application:");
+        String desc = "code";
+        for (Processor p : processors) {
+            desc = p.getClass().getSimpleName() + "(" + desc + ")";
+        }
+        System.out.println(desc);
+
         // create spoon
         Launcher spoon = new Launcher();
 
