@@ -60,6 +60,7 @@ public class LambdaLauncher {
         spoon.buildModel();
         spoon.process();
         spoon.prettyprint();
+        System.out.println("---- OVER -----");
     }
 
     private static void applyProc(String inputPath, Processor p, String outputPath) {
