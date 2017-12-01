@@ -1,79 +1,63 @@
 package fr.cnrs.i3s.sparks.composition.android.conflicts;
 
 import spoon.processing.AbstractProcessor;
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
-import spoon.reflect.code.CtReturn;
-import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtParameter;
 import spoon.reflect.declaration.CtVariable;
-import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtParameterReference;
 import spoon.reflect.visitor.filter.AbstractFilter;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.*;
+import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.isAGetter;
+import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.usesLocalVariable;
+import static fr.cnrs.i3s.sparks.composition.android.conflicts.MethodFilter.*;
 
 public class IGSInliner extends AbstractProcessor<CtClass> {
-    private Map<CtExecutable, List<CtInvocation>> igsToInvocationsMap= new HashMap<>();
-
-    public Map<CtExecutable, List<CtInvocation>> getIgsToInvocationsMap() {
-        return igsToInvocationsMap;
-    }
-
+    private Map<CtExecutable, List<CtInvocation>> igsToInvocationsMap = new HashMap<>();
+    Map<CtExecutable, CtBlock> mapsSetterToTheirInlines = new HashMap<>();
+    
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-         igsToInvocationsMap= new HashMap<>();
+        System.out.println("Starting analyse IGSInliner...");
 
-        List<CtInvocation> elements = candidate.getElements(new AbstractFilter<CtInvocation>() {
-            @Override
-            public boolean matches(CtInvocation element) {
-                return super.matches(element);
-            }
-        });
+        List<CtInvocation> allMethodInvocations = getAllMethodInvocations(candidate);
+        List<CtInvocation> callsToInternalMethods = keepCallsToInternalMethods(allMethodInvocations, candidate);
+        List<CtInvocation> callsToGetterSetter = keepCallsToGetterSetter(callsToInternalMethods);
 
-        for (CtInvocation invocation : elements) {
-            CtExecutableReference executableReference = invocation.getExecutable();
+        this.igsToInvocationsMap = buildInvocationsToModify(callsToGetterSetter);
+        System.out.println("Over analyse IGSInliner.");
 
-            // if its an internal call
-            if (executableReference.getDeclaringType() != null && executableReference.getDeclaringType().equals(candidate.getReference())) {
-
-
-                //  if its a getter/setter
-                if (isAGetterSetter(executableReference.getExecutableDeclaration())) {
-                    List<CtInvocation> invocationList = new ArrayList<>();
-                    if (igsToInvocationsMap.containsKey(executableReference.getExecutableDeclaration())) {
-                        invocationList = igsToInvocationsMap.get(executableReference.getExecutableDeclaration());
-                    }
-
-                    invocationList.add(invocation);
-                    igsToInvocationsMap.put(executableReference.getExecutableDeclaration(), invocationList);
-                }
-            }
-        }
-        return !igsToInvocationsMap.isEmpty();
+        return !callsToGetterSetter.isEmpty();
     }
-
 
     @Override
     public void process(CtClass clazz) {
+        System.out.println("Starting to process IGSInliner ...");
+
         for (Map.Entry<CtExecutable, List<CtInvocation>> entry : igsToInvocationsMap.entrySet()) {
             CtExecutable getterOrSetterMethod = entry.getKey();
 
             if (isAGetter(entry.getKey())) {
-                if (processGetter(entry, getterOrSetterMethod)) return;
+                processGetter(entry, getterOrSetterMethod);
 
             } else {
                 processSetter(entry, getterOrSetterMethod);
             }
         }
+        System.out.println("Over processing IGSInliner.");
+
     }
 
     private void processSetter(Map.Entry<CtExecutable, List<CtInvocation>> entry, CtExecutable getterOrSetterMethod) {
+        mapsSetterToTheirInlines.put(entry.getKey(), entry.getKey().getBody().clone()); // save before clone copy
         getterOrSetterMethod = getterOrSetterMethod.clone();
+
 
         CtParameter parameter = (CtParameter) getterOrSetterMethod.getParameters().get(0);
 
