@@ -1,37 +1,59 @@
 package fr.cnrs.i3s.sparks.composition.android.conflicts;
 
 import spoon.processing.AbstractProcessor;
-import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtBlock;
 import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.filter.AbstractFilter;
 
 import java.util.List;
 import java.util.Map;
 
+/*
+stocker linlgnment que j'ai fait pour chacun des CALL de setter
+et vérifier, a la fin, que ces inlinement sont egaux au body setter
+ */
 public class IGSInlinerPostCondition extends AbstractProcessor<CtClass> {
-    private Map<CtExecutable, List<CtInvocation>> igsToInvocationsMap;
+    private Map<CtExecutable, CtBlock> mapSetterToTheirInlinments;
+    private List<CtExecutable> newSetters;
+
+    public IGSInlinerPostCondition(Map<CtExecutable, CtBlock> mapSetterToTheirInlinments) {
+        this.mapSetterToTheirInlinments = mapSetterToTheirInlinments;
+    }
 
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-        
+        System.out.println("Starting analyse PostCondition IGSInliner ...");
 
-        candidate.getElements(new AbstractFilter<CtMethod>() {
+        newSetters = candidate.getElements(new AbstractFilter<CtExecutable>() {
             @Override
-            public boolean matches(CtMethod element) {
-                if (GetterSetterCriterion.isASetter(element.getReference().getExecutableDeclaration())) {
-                    System.out.println();
-                }
-                return super.matches(element);
+            public boolean matches(CtExecutable element) {
+                return mapSetterToTheirInlinments.keySet().contains(element);
             }
         });
-        return super.isToBeProcessed(candidate);
+
+        System.out.println("Over analyse PostCondition IGSInliner.");
+
+        return !newSetters.isEmpty();
     }
 
     @Override
     public void process(CtClass ctClass) {
+        boolean error = false;
+        System.out.println("Starting to process PostCondition IGSInliner ...");
+        for (CtExecutable executable : mapSetterToTheirInlinments.keySet()) {
+            CtBlock newBlock = executable.getBody();
+            CtBlock oldBlock = mapSetterToTheirInlinments.get(executable);
 
+            if (!newBlock.equals(oldBlock)) {
+                System.err.println("A Post condition has been violated: the inliner has not inlined the content of its setter");
+                error = true;
+            }
+        }
+        if (error) {
+            System.err.println("> ERROR <");
+        } else {
+            System.out.println("Over processing PostCondition IGSInliner.");
+        }
     }
 }
