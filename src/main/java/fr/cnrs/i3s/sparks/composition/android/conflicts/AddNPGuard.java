@@ -33,7 +33,6 @@ public class AddNPGuard extends AbstractProcessor<CtClass> {
     public void process(CtClass ctClass) {
         System.out.println("Starting to process AddGuard ...");
 
-        //  Retrieve all getter/setters
         List<CtMethod> setters = settersToModify;
         for (CtExecutable currentSetterMethod : setters) {
 
@@ -52,6 +51,5 @@ public class AddNPGuard extends AbstractProcessor<CtClass> {
             }
         }
         System.out.println("Over processing AddGuard.");
-
     }
 }

@@ -21,8 +21,8 @@ public class LambdaLauncher {
         IGSInlinerPostCondition igsInlinerPostCondition = new IGSInlinerPostCondition(igsInliner.mapsSetterToTheirInlines);
 
         //applyProcs(inputPath, Arrays.asList(igsInliner, new AddNPGuard(),igsInlinerPostCondition), "target/spooned");
-        applyProcs(inputPath, Arrays.asList(igsInliner, new AddNPGuard(), igsInlinerPostCondition), "target/spooned");
-        applyProcs(inputPath, Arrays.asList(new AddNPGuard(), igsInliner, igsInlinerPostCondition), "target/spooned");
+        applyProcs(inputPath, Arrays.asList(igsInliner, new AddNPGuard(), igsInlinerPostCondition), "target/spooned-Guard_of_IGS_of_c");
+        applyProcs(inputPath, Arrays.asList(new AddNPGuard(), igsInliner, igsInlinerPostCondition), "target/spooned-IGS_of_Guard_of_c");
 
         /*
         applyProcs(inputPath, Arrays.asList(new AddNPGuard(), new IGSInliner()), "target/spooned-GI");
