@@ -12,23 +12,15 @@ public class LambdaLauncher {
 
     public static void main(String[] args) throws Exception {
         applyOn("/Users/benjaminbenni/Work/interference/src/main/resources/DataTypeField.java");
-
-//        applyOn("/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/export/format/GoogleFitData.java");
+        //applyOn("/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/export/format/GoogleFitData.java");
     }
 
     private static void applyOn(String inputPath) {
         IGSInliner igsInliner = new IGSInliner();
         IGSInlinerPostCondition igsInlinerPostCondition = new IGSInlinerPostCondition(igsInliner.mapsSetterToTheirInlines);
 
-        //applyProcs(inputPath, Arrays.asList(igsInliner, new AddNPGuard(),igsInlinerPostCondition), "target/spooned");
-        applyProcs(inputPath, Arrays.asList(igsInliner, new AddNPGuard(), igsInlinerPostCondition), "target/spooned-Guard_of_IGS_of_c");
-        applyProcs(inputPath, Arrays.asList(new AddNPGuard(), igsInliner, igsInlinerPostCondition), "target/spooned-IGS_of_Guard_of_c");
-
-        /*
-        applyProcs(inputPath, Arrays.asList(new AddNPGuard(), new IGSInliner()), "target/spooned-GI");
-        applyProcs(inputPath, Arrays.asList(new IGSInliner(), new AddNPGuard()), "target/spooned-IG");
-        */
-
+        applyProcs(inputPath, Arrays.asList(new MyHMUFixer(), new AddLambda(), igsInliner, new AddNPGuard(), igsInlinerPostCondition), "target/spooned-Guard_of_IGS_of_c");
+        applyProcs(inputPath, Arrays.asList(new AddNPGuard(), new MyHMUFixer(), igsInliner, igsInlinerPostCondition), "target/spooned-IGS_of_Guard_of_c");
     }
 
 
