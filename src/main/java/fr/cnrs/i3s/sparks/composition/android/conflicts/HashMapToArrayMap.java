@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MyHMUFixer extends AbstractProcessor<CtLocalVariable> {
+public class HashMapToArrayMap extends AbstractProcessor<CtLocalVariable> {
     private List<CtLocalVariable> alreadyHandled = new ArrayList<>();
 
     @Override

@@ -19,8 +19,8 @@ public class LambdaLauncher {
         IGSInliner igsInliner = new IGSInliner();
         IGSInlinerPostCondition igsInlinerPostCondition = new IGSInlinerPostCondition(igsInliner.mapsSetterToTheirInlines);
 
-        applyProcs(inputPath, Arrays.asList(new MyHMUFixer(), new AddLambda(), igsInliner, new AddNPGuard(), igsInlinerPostCondition), "target/spooned-Guard_of_IGS_of_c");
-        applyProcs(inputPath, Arrays.asList(new AddNPGuard(), new MyHMUFixer(), igsInliner, igsInlinerPostCondition), "target/spooned-IGS_of_Guard_of_c");
+        applyProcs(inputPath, Arrays.asList(new HashMapToArrayMap(), new AddLambda(), igsInliner, new AddNPGuard(), igsInlinerPostCondition), "target/spooned-Guard_of_IGS_of_c");
+        applyProcs(inputPath, Arrays.asList(new AddNPGuard(), new HashMapToArrayMap(), igsInliner, igsInlinerPostCondition), "target/spooned-IGS_of_Guard_of_c");
     }
 
 
