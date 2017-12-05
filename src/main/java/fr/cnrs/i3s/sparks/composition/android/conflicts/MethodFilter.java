@@ -88,7 +88,7 @@ public class MethodFilter {
         List<CtMethod> elements = ctClass.getElements(new AbstractFilter<CtMethod>() {
             @Override
             public boolean matches(CtMethod element) {
-                return super.matches(element);
+                return element.getParent().equals(ctClass);
             }
         });
 

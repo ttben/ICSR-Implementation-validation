@@ -7,6 +7,7 @@ import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtMethod;
 
 import java.io.File;
 import java.util.Arrays;
@@ -87,10 +88,10 @@ public class IsoLauncher {
                         e = c;
                     }
                     original.delete();
-                } else if (e instanceof CtBlock) { // setter
+                } else if (e instanceof CtMethod) { // setter
 
-                    CtIf shouldBeACtIf = (CtIf) modificationsMap.get(e);
-                    ((CtBlock) e).setStatements(Arrays.asList(shouldBeACtIf));
+                    CtIf shouldBeACtIf = (CtIf) currentMap.get(e);
+                    ((CtMethod) e).setBody(shouldBeACtIf);
                     //e.setParent(null);
                 }
             }

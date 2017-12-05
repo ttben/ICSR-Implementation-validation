@@ -24,7 +24,7 @@ public class Accumulator {
             if (e == element) {
                 // can happened: the Guard and Inliner will put
                 //fixme guard seems to push the same method twice, why?
-                //throw new IllegalStateException("Oups. Dafuq?");
+                throw new IllegalStateException("Oups. Dafuq?");
             }
         }
 
