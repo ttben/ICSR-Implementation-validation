@@ -7,17 +7,22 @@ import spoon.reflect.reference.CtParameterReference;
 import spoon.reflect.visitor.filter.AbstractFilter;
 import spoon.support.reflect.declaration.CtMethodImpl;
 
-import java.sql.Statement;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.isAGetter;
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.usesLocalVariable;
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.MethodFilter.*;
 
 public class IGSInliner extends AbstractProcessor<CtClass> {
-    private final Accumulator accumulator;
+    private Accumulator accumulator;
     private Map<CtExecutable, List<CtInvocation>> igsToInvocationsMap = new HashMap<>();
-    Map<CtExecutable, CtBlock> mapsSetterToTheirInlines = new HashMap<>();
+    Map<CtClass, Map<CtExecutable, CtBlock>> mapsSetterToTheirInlines = new HashMap<>();
+
+    public IGSInliner() {
+    }
 
     public IGSInliner(Accumulator accumulator) {
         this.accumulator = accumulator;
@@ -39,24 +44,25 @@ public class IGSInliner extends AbstractProcessor<CtClass> {
 
     @Override
     public void process(CtClass clazz) {
-        //System.out.println("Starting to process IGSInliner ...");
-
         for (Map.Entry<CtExecutable, List<CtInvocation>> entry : igsToInvocationsMap.entrySet()) {
             CtExecutable getterOrSetterMethod = entry.getKey();
 
             if (isAGetter(entry.getKey())) {
-                //processGetter(entry, getterOrSetterMethod);
-
+                processGetter(entry, getterOrSetterMethod);
             } else {
-                processSetter(entry, getterOrSetterMethod);
+                processSetter(clazz, entry, getterOrSetterMethod);
             }
         }
-        //System.out.println("Over processing IGSInliner.");
-
     }
 
-    private void processSetter(Map.Entry<CtExecutable, List<CtInvocation>> entry, CtExecutable getterOrSetterMethod) {
+    private void processSetter(CtClass clazz, Map.Entry<CtExecutable, List<CtInvocation>> entry, CtExecutable getterOrSetterMethod) {
+
+        Map<CtExecutable, CtBlock> mapsSetterToTheirInlines = new HashMap<>();
+        if (this.mapsSetterToTheirInlines.containsKey(clazz)) {
+            mapsSetterToTheirInlines = this.mapsSetterToTheirInlines.get(clazz);
+        }
         mapsSetterToTheirInlines.put(entry.getKey(), entry.getKey().getBody().clone()); // save before clone copy
+        this.mapsSetterToTheirInlines.put(clazz, mapsSetterToTheirInlines);
         getterOrSetterMethod = getterOrSetterMethod.clone();
 
         CtParameter parameter = (CtParameter) getterOrSetterMethod.getParameters().get(0);
@@ -79,17 +85,19 @@ public class IGSInliner extends AbstractProcessor<CtClass> {
             newBlock.setParent(ctInvocation.getParent());
 
             newBlock.addStatement((CtStatement) newVariable);
-            for (CtStatement s : getterOrSetterMethod.getBody().getStatements() ) {
+            for (CtStatement s : getterOrSetterMethod.getBody().getStatements()) {
                 newBlock.addStatement(s);
             }
 
-            //ctInvocation.insertBefore((CtStatement) newVariable);
+            if (accumulator == null) {
+                //normal calls:
+                ctInvocation.insertBefore((CtStatement) newVariable);
 
-            //System.out.println(ctInvocation);
-            accumulator.add(ctInvocation, newBlock);
-            // TODO ctInvocation.replace(getFactory().createCodeSnippetStatement(getterOrSetterMethod.getBody().toString()));
-            //  Effectively replace the call by the updated body
-             //ctInvocation.replace(getterOrSetterMethod.getBody().getStatements());
+                //  Effectively replace the call by the updated body
+                ctInvocation.replace(getterOrSetterMethod.getBody().getStatements());
+            } else {
+                accumulator.add(this, ctInvocation, newBlock);
+            }
         }
     }
 

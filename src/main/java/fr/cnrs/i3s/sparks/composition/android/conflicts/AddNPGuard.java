@@ -23,6 +23,8 @@ public class AddNPGuard extends AbstractProcessor<CtClass> {
         this.accumulator = accumulator;
     }
 
+    public AddNPGuard() { }
+
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
         //System.out.println("Starting analyse AddGuard...");
@@ -51,9 +53,12 @@ public class AddNPGuard extends AbstractProcessor<CtClass> {
                 //  Add NON NULL guard with parameter name
                 ctIf.setCondition(getFactory().createCodeSnippetExpression(parameter.getSimpleName() + " != null"));
 
-                accumulator.add(currentSetterMethod.getBody(), ctIf);
-                //  Replace body of the initial method by the if (that wraps everything)
-                //currentSetterMethod.setBody(ctIf);
+                if (accumulator != null) {
+                    accumulator.add(this, currentSetterMethod.getBody(), ctIf);
+                } else {
+                    //  Replace body of the initial method by the if (that wraps everything)
+                    currentSetterMethod.setBody(ctIf);
+                }
             }
         }
         //System.out.println("Over processing AddGuard.");
