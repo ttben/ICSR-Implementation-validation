@@ -6,7 +6,9 @@ import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtStatementList;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 
 import java.io.File;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 public class IsoLauncher {
+    private static Map<CtClass, Map<CtExecutable, CtBlock>> mapSetterToTheirLines;
     private final String inputPath;
     private final String outputPath;
     private final List<Processor> processors;
@@ -27,7 +30,9 @@ public class IsoLauncher {
         String inputPath = "/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/";
         String outputPath = "target/spooned-iso";
         Accumulator accumulator = new Accumulator();
-        List<Processor> processors = Arrays.asList(new IGSInliner(accumulator), new AddNPGuard(accumulator));
+        IGSInliner igsInliner = new IGSInliner(accumulator);
+        mapSetterToTheirLines = igsInliner.mapsSetterToTheirInlines;
+        List<Processor> processors = Arrays.asList(igsInliner, new AddNPGuard(accumulator));
 
         IsoLauncher seqLauncher = new IsoLauncher(inputPath, processors, outputPath, accumulator);
         seqLauncher.apply();
@@ -96,6 +101,8 @@ public class IsoLauncher {
                 }
             }
         }
+
+        spoon.getModel().processWith(new IGSInlinerPostCondition(mapSetterToTheirLines));
         spoon.prettyprint();
     }
 }
