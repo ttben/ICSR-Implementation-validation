@@ -23,7 +23,7 @@ public class IGSInlinerPostCondition extends AbstractProcessor<CtClass> {
 
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-        System.out.println("Starting analyse PostCondition IGSInliner ...");
+        //System.out.println("Starting analyse PostCondition IGSInliner ...");
 
         newSetters = candidate.getElements(new AbstractFilter<CtExecutable>() {
             @Override
@@ -32,28 +32,29 @@ public class IGSInlinerPostCondition extends AbstractProcessor<CtClass> {
             }
         });
 
-        System.out.println("Over analyse PostCondition IGSInliner.");
-
+       //System.out.println("Over analyse PostCondition IGSInliner.");
+        LambdaLauncher.nbSetters += newSetters.size();
         return !newSetters.isEmpty();
     }
 
     @Override
     public void process(CtClass ctClass) {
         boolean error = false;
-        System.out.println("Starting to process PostCondition IGSInliner ...");
+        //System.out.println("Starting to process PostCondition IGSInliner ...");
         for (CtExecutable executable : mapSetterToTheirInlinments.keySet()) {
             CtBlock newBlock = executable.getBody();
             CtBlock oldBlock = mapSetterToTheirInlinments.get(executable);
 
             if (!newBlock.equals(oldBlock)) {
-                System.err.println("A Post condition has been violated: the inliner has not inlined the content of its setter");
+                //System.err.println("A Post condition has been violated: the inliner has not inlined the content of its setter");
                 error = true;
+                LambdaLauncher.nbErrors++;
             }
         }
         if (error) {
-            System.err.println("> ERROR <");
+            //System.err.println("> ERROR <");
         } else {
-            System.out.println("Over processing PostCondition IGSInliner.");
+            //System.out.println("Over processing PostCondition IGSInliner.");
         }
     }
 }

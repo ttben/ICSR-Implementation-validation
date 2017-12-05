@@ -17,6 +17,9 @@ public class GetterSetterCriterion {
     }
 
     static boolean isAGetter(CtExecutable executable) {
+        if (executable == null || executable.getSimpleName() == null) {
+           return false;
+        }
         if (executable.getSimpleName().startsWith("get")) {
             if (!executable.getType().getActualClass().equals(Void.class)) {
                 if (executable.getParameters().size() == 0) {
@@ -34,6 +37,9 @@ public class GetterSetterCriterion {
     }
 
     static boolean isASetter(CtExecutable executable) {
+        if (executable == null || executable.getSimpleName() == null) {
+            return false;
+        }
         if (executable.getSimpleName().startsWith("set")) {
             if (executable.getType().getActualClass().getSimpleName().equals("void") && executable.getType().isPrimitive()) {
                 if (executable.getParameters().size() == 1) {

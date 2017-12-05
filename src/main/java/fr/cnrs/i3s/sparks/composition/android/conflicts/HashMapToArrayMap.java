@@ -20,7 +20,7 @@ public class HashMapToArrayMap extends AbstractProcessor<CtLocalVariable> {
 
     @Override
     public boolean isToBeProcessed(CtLocalVariable localVariable) {
-        System.out.println("HMU");
+        //System.out.println("HMU");
         if (alreadyHandled.contains(localVariable)) {
             return false;
         }
@@ -39,7 +39,7 @@ public class HashMapToArrayMap extends AbstractProcessor<CtLocalVariable> {
                     return false;
                 }
             }
-            System.out.println(elements);
+            //System.out.println(elements);
 
 
         } catch (SpoonClassNotFoundException e) {
@@ -50,6 +50,10 @@ public class HashMapToArrayMap extends AbstractProcessor<CtLocalVariable> {
     }
 
     private List<CtInvocation> getCtInvocations(CtLocalVariable localVariable) {
+        if (localVariable == null || localVariable.getParent(CtMethod.class) == null) {
+            // is an anonymous function TODO
+            return new ArrayList<>();
+        }
         return localVariable.getParent(CtMethod.class).getElements(new AbstractFilter<CtInvocation>() {
             @Override
             public boolean matches(CtInvocation element) {
@@ -98,7 +102,7 @@ public class HashMapToArrayMap extends AbstractProcessor<CtLocalVariable> {
         List<CtInvocation> ctInvocations = getCtInvocations(ctLocalVariable);
         for (CtInvocation invocation : ctInvocations) {
             invocation.getTarget().setType(ctTypeReference);
-            System.out.println(invocation);
+            //System.out.println(invocation);
         }
     }
 }

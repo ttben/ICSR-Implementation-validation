@@ -2,55 +2,56 @@ package fr.cnrs.i3s.sparks.composition.android.conflicts;
 
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.*;
-import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtParameter;
-import spoon.reflect.declaration.CtVariable;
+import spoon.reflect.declaration.*;
 import spoon.reflect.reference.CtParameterReference;
 import spoon.reflect.visitor.filter.AbstractFilter;
+import spoon.support.reflect.declaration.CtMethodImpl;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.sql.Statement;
+import java.util.*;
 
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.isAGetter;
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.usesLocalVariable;
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.MethodFilter.*;
 
 public class IGSInliner extends AbstractProcessor<CtClass> {
+    private final Accumulator accumulator;
     private Map<CtExecutable, List<CtInvocation>> igsToInvocationsMap = new HashMap<>();
     Map<CtExecutable, CtBlock> mapsSetterToTheirInlines = new HashMap<>();
 
+    public IGSInliner(Accumulator accumulator) {
+        this.accumulator = accumulator;
+    }
+
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-        System.out.println("Starting analyse IGSInliner...");
+        //System.out.println("Starting analyse IGSInliner...");
 
         List<CtInvocation> allMethodInvocations = getAllMethodInvocations(candidate);
         List<CtInvocation> callsToInternalMethods = keepCallsToInternalMethods(allMethodInvocations, candidate);
         List<CtInvocation> callsToGetterSetter = keepCallsToGetterSetter(callsToInternalMethods);
 
         this.igsToInvocationsMap = buildInvocationsToModify(callsToGetterSetter);
-        System.out.println("Over analyse IGSInliner.");
+        //System.out.println("Over analyse IGSInliner.");
 
         return !callsToGetterSetter.isEmpty();
     }
 
     @Override
     public void process(CtClass clazz) {
-        System.out.println("Starting to process IGSInliner ...");
+        //System.out.println("Starting to process IGSInliner ...");
 
         for (Map.Entry<CtExecutable, List<CtInvocation>> entry : igsToInvocationsMap.entrySet()) {
             CtExecutable getterOrSetterMethod = entry.getKey();
 
             if (isAGetter(entry.getKey())) {
-                processGetter(entry, getterOrSetterMethod);
+                //processGetter(entry, getterOrSetterMethod);
 
             } else {
                 processSetter(entry, getterOrSetterMethod);
             }
         }
-        System.out.println("Over processing IGSInliner.");
+        //System.out.println("Over processing IGSInliner.");
 
     }
 
@@ -74,10 +75,21 @@ public class IGSInliner extends AbstractProcessor<CtClass> {
             newVariable.setDefaultExpression((CtExpression) ctInvocation.getArguments().get(0));
 
             // Add the variable to the body that will replace the call
-            ctInvocation.insertBefore((CtStatement) newVariable);
+            CtStatementList newBlock = getFactory().createStatementList();
+            newBlock.setParent(ctInvocation.getParent());
 
+            newBlock.addStatement((CtStatement) newVariable);
+            for (CtStatement s : getterOrSetterMethod.getBody().getStatements() ) {
+                newBlock.addStatement(s);
+            }
+
+            //ctInvocation.insertBefore((CtStatement) newVariable);
+
+            //System.out.println(ctInvocation);
+            accumulator.add(ctInvocation, newBlock);
+            // TODO ctInvocation.replace(getFactory().createCodeSnippetStatement(getterOrSetterMethod.getBody().toString()));
             //  Effectively replace the call by the updated body
-            ctInvocation.replace(getterOrSetterMethod.getBody().getStatements());
+             //ctInvocation.replace(getterOrSetterMethod.getBody().getStatements());
         }
     }
 
@@ -112,6 +124,13 @@ public class IGSInliner extends AbstractProcessor<CtClass> {
         if (usesLocalVariable(getterOrSetterMethod)) {
             // renaming needed
             return true;
+        }
+
+        if (getterOrSetterMethod instanceof CtMethod && ((CtMethodImpl) getterOrSetterMethod).isAbstract()) {
+            return false;
+        }
+        if (getterOrSetterMethod == null || getterOrSetterMethod.getBody() == null || getterOrSetterMethod.getBody().getStatements() == null) {
+            System.out.println();
         }
 
         List<CtStatement> statements = getterOrSetterMethod.getBody().clone().getStatements();

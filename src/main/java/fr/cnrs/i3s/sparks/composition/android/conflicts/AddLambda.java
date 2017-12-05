@@ -16,9 +16,15 @@ import java.util.function.BiConsumer;
 
 public class AddLambda extends AbstractProcessor<CtForEach> {
 
+    private Accumulator accumulator;
+
+    AddLambda(Accumulator accumulator) {
+        this.accumulator = accumulator;
+    }
+
     @Override
     public boolean isToBeProcessed(CtForEach candidate) {
-        System.out.println("LAMBDA");
+        //System.out.println("LAMBDA");
         try {
             return candidate.getVariable().getType().getActualClass().equals(Map.Entry.class)
                     && Map.class.isAssignableFrom(((CtInvocation)candidate.getExpression()).getTarget().getType().getActualClass());
@@ -74,7 +80,7 @@ public class AddLambda extends AbstractProcessor<CtForEach> {
             ctLambda.setParent(ctInvocation);
 
             forEach.replace(ctInvocation);
-            System.out.println(ctInvocation);
+            //System.out.println(ctInvocation);
         }
     }
 

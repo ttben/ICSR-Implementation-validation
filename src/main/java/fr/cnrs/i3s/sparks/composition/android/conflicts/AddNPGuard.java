@@ -17,21 +17,26 @@ import static fr.cnrs.i3s.sparks.composition.android.conflicts.MethodFilter.keep
 
 public class AddNPGuard extends AbstractProcessor<CtClass> {
     private List<CtMethod> settersToModify = new ArrayList<>();
+    private Accumulator accumulator;
+
+    AddNPGuard(Accumulator accumulator) {
+        this.accumulator = accumulator;
+    }
 
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-        System.out.println("Starting analyse AddGuard...");
+        //System.out.println("Starting analyse AddGuard...");
 
         List<CtMethod> allMethods = getAllMethods(candidate);
         settersToModify = keepSetters(allMethods);
-        System.out.println("Over analyse AddGuard.");
+        //System.out.println("Over analyse AddGuard.");
 
         return !settersToModify.isEmpty();
     }
 
     @Override
     public void process(CtClass ctClass) {
-        System.out.println("Starting to process AddGuard ...");
+        //System.out.println("Starting to process AddGuard ...");
 
         List<CtMethod> setters = settersToModify;
         for (CtExecutable currentSetterMethod : setters) {
@@ -46,10 +51,11 @@ public class AddNPGuard extends AbstractProcessor<CtClass> {
                 //  Add NON NULL guard with parameter name
                 ctIf.setCondition(getFactory().createCodeSnippetExpression(parameter.getSimpleName() + " != null"));
 
+                accumulator.add(currentSetterMethod.getBody(), ctIf);
                 //  Replace body of the initial method by the if (that wraps everything)
-                currentSetterMethod.setBody(ctIf);
+                //currentSetterMethod.setBody(ctIf);
             }
         }
-        System.out.println("Over processing AddGuard.");
+        //System.out.println("Over processing AddGuard.");
     }
 }
