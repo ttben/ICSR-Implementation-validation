@@ -7,31 +7,58 @@ import spoon.reflect.reference.CtParameterReference;
 import spoon.reflect.visitor.filter.AbstractFilter;
 import spoon.support.reflect.declaration.CtMethodImpl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.isAGetter;
+import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.isASimpleSetter;
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.usesLocalVariable;
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.MethodFilter.*;
 
 public class IGSInlinerSimple extends AbstractProcessor<CtClass> {
     private Accumulator accumulator;
-    List<CtInvocation> igsInvocation = new ArrayList<>();
+    List<CtInvocation> igsInvocation;
+    List<CtInvocation> igsInvocationCopy;
     List<CtClass> targetClasses = new ArrayList<>();
 
-    public IGSInlinerSimple(Accumulator accumulator, List<CtInvocation> igsInvocation)  {
+    public IGSInlinerSimple(Accumulator accumulator, List<CtInvocation> igsInvocation) {
         this.accumulator = accumulator;
-        this.igsInvocation = igsInvocation;
-
+        this.igsInvocationCopy = igsInvocation;
     }
+
+
+    public IGSInlinerSimple() {
+    }
+
 
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-        for (CtInvocation invocation : igsInvocation) {
-            targetClasses.add(invocation.getParent(CtClass.class));
+        if (candidate.getQualifiedName().contains("GooglePlusSynchronizer")) {
+            System.out.println();
         }
-        for (CtClass c : targetClasses) {
-            if (c == candidate) {
+
+        igsInvocationCopy = null;
+        if (igsInvocation == null) {
+            List<CtInvocation> allMethodInvocations = getAllMethodInvocations(candidate);
+            List<CtInvocation> callsToInternalMethods = keepCallsToInternalMethods(allMethodInvocations, candidate);
+            List<CtInvocation> callsToGetterSetter = keepCallsToSimpleSetter(callsToInternalMethods);
+            igsInvocationCopy = callsToGetterSetter;
+            if (igsInvocationCopy.isEmpty()) {
+                return false;
+            } else {
                 return true;
+            }
+        } else {
+            igsInvocationCopy = igsInvocation;
+            for (CtInvocation invocation : igsInvocation) {
+                targetClasses.add(invocation.getParent(CtClass.class));
+            }
+            for (CtClass c : targetClasses) {
+                if (c == candidate) {
+                    return true;
+                }
             }
         }
         return false;
@@ -39,7 +66,7 @@ public class IGSInlinerSimple extends AbstractProcessor<CtClass> {
 
     @Override
     public void process(CtClass clazz) {
-        for (CtInvocation entry : igsInvocation) {
+        for (CtInvocation entry : igsInvocationCopy) {
             if (isAGetter(entry.getExecutable().getExecutableDeclaration())) {
                 // processGetter(entry, entry.getExecutable().getExecutableDeclaration());
             } else {

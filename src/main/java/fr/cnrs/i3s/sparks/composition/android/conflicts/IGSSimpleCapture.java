@@ -21,10 +21,6 @@ public class IGSSimpleCapture  extends AbstractProcessor<CtClass> {
 
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-        System.out.println(candidate.getQualifiedName());
-        if (candidate.getQualifiedName().contains("DataType")) {
-            System.out.println();
-        }
         List<CtInvocation> allMethodInvocations = getAllMethodInvocations(candidate);
         List<CtInvocation> callsToInternalMethods = keepCallsToInternalMethods(allMethodInvocations, candidate);
         List<CtInvocation> callsToGetterSetter = keepCallsToSimpleSetter(callsToInternalMethods);

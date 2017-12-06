@@ -1,5 +1,6 @@
 package fr.cnrs.i3s.sparks.composition.android.conflicts;
 
+import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
@@ -25,7 +26,7 @@ public class GetterSetterCriterion {
 
         if (executable.getSimpleName().startsWith("set")) {
             if (executable.getType().getActualClass().getSimpleName().equals("void") && executable.getType().isPrimitive()) {
-                if (executable.getParameters().size() == 1 && executable.getBody().getStatements().size() == 1 && executable.getBody().getStatements().get(0) instanceof CtThisAccess) {
+                if (executable.getParameters().size() == 1 && executable.getBody().getStatements().size() == 1 && ((executable.getBody().getStatements().get(0) instanceof CtThisAccess) ||(executable.getBody().getStatements().get(0) instanceof CtAssignment))) {
                     return true;
                 }
             }

@@ -15,20 +15,53 @@ public class SeqLauncher {
 
     public static void main(String[] args) {
         String inputPath = "/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/";
-        String outputPath = "target/spooned-seq-igs-guard-checkIGS";
-        IGSInlinerAlternative igsInliner = new IGSInlinerAlternative();
-        List<Processor> processors = Arrays.asList(igsInliner, new AddNPGuard(), new IGSInlinerAlternativePostCondition(igsInliner.mapsSetterToTheirInlines));
+        String outputPath = "";
+        IGSInlinerAlternative igsInliner = null;
+        List<Processor> processors = null;
+        SeqLauncher seqLauncher = null;
 
-        SeqLauncher seqLauncher = new SeqLauncher(inputPath, processors, outputPath);
-        seqLauncher.apply();
+        IGSSimpleCapture capture=null;
+        IGSInlinerSimple igsSimpleInliner = null;
+
+        // -- Traditional / simple IGS definition
+        outputPath = "target/spooned-seq-igsSimple-guard-checkIGS";
+        capture = new IGSSimpleCapture();
+        igsSimpleInliner = new IGSInlinerSimple();
+        processors = Arrays.asList(capture, igsSimpleInliner, new AddNPGuard(), new IGSInlinerSimplePostCondition(capture.igsInvocation));
+
+        seqLauncher = new SeqLauncher(inputPath, processors, outputPath);
+        seqLauncher.apply();    // Should succeed !
 
         // ---
 
-        outputPath = "target/spooned-seq-guard-igs-checkIGS";
-        processors = Arrays.asList(new AddNPGuard(), new IGSInlinerAlternative());
+        outputPath = "target/spooned-seq-guard-igsSimple-checkIGS";
+        capture = new IGSSimpleCapture();
+        igsSimpleInliner = new IGSInlinerSimple();
+        processors = Arrays.asList(capture, new AddNPGuard(), igsSimpleInliner, new IGSInlinerSimplePostCondition(capture.igsInvocation));
 
         seqLauncher = new SeqLauncher(inputPath, processors, outputPath);
-        seqLauncher.apply();
+        seqLauncher.apply();    // Should failed
+
+
+
+
+        // ---- Alternative definition of IGS:
+
+        outputPath = "target/spooned-seq-igsAlternative-guard-checkIGS";
+        igsInliner = new IGSInlinerAlternative();
+        processors = Arrays.asList(igsInliner, new AddNPGuard(), new IGSInlinerAlternativePostCondition(igsInliner.mapsSetterToTheirInlines));
+
+        seqLauncher = new SeqLauncher(inputPath, processors, outputPath);
+        seqLauncher.apply();    // Should failed
+
+        // ---
+
+        outputPath = "target/spooned-seq-guard-igsAlternative-checkIGS";
+        processors = Arrays.asList(new AddNPGuard(), new IGSInlinerAlternative(), new IGSInlinerAlternativePostCondition(igsInliner.mapsSetterToTheirInlines));
+
+        seqLauncher = new SeqLauncher(inputPath, processors, outputPath);
+        seqLauncher.apply(); // Should succeed !
+
     }
 
     SeqLauncher(String inputPath, List<Processor> processors, String outputPath) {
