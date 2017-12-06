@@ -14,6 +14,7 @@ import java.util.Map;
 
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.isAGetterSetter;
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.isASetter;
+import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.isASimpleSetter;
 
 public class MethodFilter {
     static Map<CtExecutable, List<CtInvocation>> buildInvocationsToModify(List<CtInvocation> callsToGetterSetter) {
@@ -63,6 +64,16 @@ public class MethodFilter {
         for (CtMethod currentMethod : methods) {
             CtExecutableReference executableReference = currentMethod.getReference();
             if (isASetter(executableReference.getExecutableDeclaration())) {
+                setters.add(currentMethod);
+            }
+        }
+        return setters;
+    }
+    static List<CtMethod> keepSimpleSetters(List<CtMethod> methods) {
+        List<CtMethod> setters = new ArrayList<>();
+        for (CtMethod currentMethod : methods) {
+            CtExecutableReference executableReference = currentMethod.getReference();
+            if (isASimpleSetter(executableReference.getExecutableDeclaration())) {
                 setters.add(currentMethod);
             }
         }

@@ -12,14 +12,14 @@ import java.util.Map;
 /*
     Check if every setter (even not simple) has been correctly 'inlined'
  */
-public class IGSInlinerPostCondition extends AbstractProcessor<CtClass> {
+public class IGSInlinerAlternativePostCondition extends AbstractProcessor<CtClass> {
     private Map<CtClass, Map<CtExecutable, CtBlock>> mapSetterToTheirInlinments;
     private List<CtExecutable> newSetters;
 
     int nbErrors = 0;
     int nbSetters = 0;
 
-    public IGSInlinerPostCondition(Map<CtClass, Map<CtExecutable, CtBlock>> mapSetterToTheirInlinments) {
+    public IGSInlinerAlternativePostCondition(Map<CtClass, Map<CtExecutable, CtBlock>> mapSetterToTheirInlinments) {
         this.mapSetterToTheirInlinments = mapSetterToTheirInlinments;
     }
 

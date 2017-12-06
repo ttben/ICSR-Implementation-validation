@@ -30,7 +30,7 @@ public class IsoLauncher {
         String inputPath = "/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/";
         String outputPath = "target/spooned-iso";
         Accumulator accumulator = new Accumulator();
-        IGSInliner igsInliner = new IGSInliner(accumulator);
+        IGSInlinerAlternative igsInliner = new IGSInlinerAlternative(accumulator);
         mapSetterToTheirLines = igsInliner.mapsSetterToTheirInlines;
         List<Processor> processors = Arrays.asList(igsInliner, new AddNPGuard(accumulator));
 
@@ -102,7 +102,7 @@ public class IsoLauncher {
             }
         }
 
-        spoon.getModel().processWith(new IGSInlinerPostCondition(mapSetterToTheirLines));
+        spoon.getModel().processWith(new IGSInlinerAlternativePostCondition(mapSetterToTheirLines));
         spoon.prettyprint();
     }
 }

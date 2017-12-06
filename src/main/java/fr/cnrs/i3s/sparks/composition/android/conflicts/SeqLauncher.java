@@ -16,8 +16,8 @@ public class SeqLauncher {
     public static void main(String[] args) {
         String inputPath = "/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/";
         String outputPath = "target/spooned-seq-igs-guard-checkIGS";
-        IGSInliner igsInliner = new IGSInliner();
-        List<Processor> processors = Arrays.asList(igsInliner, new AddNPGuard(), new IGSInlinerPostCondition(igsInliner.mapsSetterToTheirInlines));
+        IGSInlinerAlternative igsInliner = new IGSInlinerAlternative();
+        List<Processor> processors = Arrays.asList(igsInliner, new AddNPGuard(), new IGSInlinerAlternativePostCondition(igsInliner.mapsSetterToTheirInlines));
 
         SeqLauncher seqLauncher = new SeqLauncher(inputPath, processors, outputPath);
         seqLauncher.apply();
@@ -25,7 +25,7 @@ public class SeqLauncher {
         // ---
 
         outputPath = "target/spooned-seq-guard-igs-checkIGS";
-        processors = Arrays.asList(new AddNPGuard(), new IGSInliner());
+        processors = Arrays.asList(new AddNPGuard(), new IGSInlinerAlternative());
 
         seqLauncher = new SeqLauncher(inputPath, processors, outputPath);
         seqLauncher.apply();

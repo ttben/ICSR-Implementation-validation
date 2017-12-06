@@ -16,15 +16,15 @@ import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCrite
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.usesLocalVariable;
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.MethodFilter.*;
 
-public class IGSInliner extends AbstractProcessor<CtClass> {
+public class IGSInlinerSimple extends AbstractProcessor<CtClass> {
     private Accumulator accumulator;
     private Map<CtExecutable, List<CtInvocation>> igsToInvocationsMap = new HashMap<>();
     Map<CtClass, Map<CtExecutable, CtBlock>> mapsSetterToTheirInlines = new HashMap<>();
 
-    public IGSInliner() {
+    public IGSInlinerSimple() {
     }
 
-    public IGSInliner(Accumulator accumulator) {
+    public IGSInlinerSimple(Accumulator accumulator) {
         this.accumulator = accumulator;
     }
 

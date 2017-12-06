@@ -1,5 +1,6 @@
 package fr.cnrs.i3s.sparks.composition.android.conflicts;
 
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.visitor.filter.AbstractFilter;
@@ -12,6 +13,21 @@ public class GetterSetterCriterion {
         try {
             return isAGetter(executable) || isASetter(executable);
         } catch (SpoonClassNotFoundException e) {
+        }
+        return false;
+    }
+
+    static boolean isASimpleSetter(CtExecutable executable) {
+        if (executable == null || executable.getSimpleName() == null) {
+            return false;
+        }
+
+        if (executable.getSimpleName().startsWith("set")) {
+            if (executable.getType().getActualClass().getSimpleName().equals("void") && executable.getType().isPrimitive()) {
+                if (executable.getParameters().size() == 1 && executable.getBody().getStatements().size() == 1) {
+                    return true;
+                }
+            }
         }
         return false;
     }

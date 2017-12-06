@@ -27,17 +27,8 @@ public class AddNPGuard extends AbstractProcessor<CtClass> {
 
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-        if (candidate.getQualifiedName().equalsIgnoreCase("org.runnerup.export.format.GoogleFitData")) {
-            System.out.println();
-        }
-        //System.out.println("Starting analyse AddGuard...");
-
         List<CtMethod> allMethods = getAllMethods(candidate);
         settersToModify = keepSetters(allMethods);
-        //System.out.println("Over analyse AddGuard.");
-
-        System.out.println(candidate.getQualifiedName());
-
         return !settersToModify.isEmpty();
     }
 
