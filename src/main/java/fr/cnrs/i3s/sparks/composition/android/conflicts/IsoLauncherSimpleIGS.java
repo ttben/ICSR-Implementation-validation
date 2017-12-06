@@ -2,22 +2,21 @@ package fr.cnrs.i3s.sparks.composition.android.conflicts;
 
 import spoon.Launcher;
 import spoon.processing.Processor;
-import spoon.reflect.code.CtBlock;
-import spoon.reflect.code.CtIf;
-import spoon.reflect.code.CtStatement;
-import spoon.reflect.code.CtStatementList;
+import spoon.reflect.code.*;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class IsoLauncher {
+public class IsoLauncherSimpleIGS {
     private static Map<CtClass, Map<CtExecutable, CtBlock>> mapSetterToTheirLines;
+    private static List<CtInvocation> callToSimpleSetterToDelete = new ArrayList<>();
     private final String inputPath;
     private final String outputPath;
     private final List<Processor> processors;
@@ -28,17 +27,21 @@ public class IsoLauncher {
 
     public static void main(String[] args) throws Exception {
         String inputPath = "/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/";
-        String outputPath = "target/spooned-iso";
+        String outputPath = "target/spooned-iso-simple-igs";
         Accumulator accumulator = new Accumulator();
-        IGSInlinerAlternative igsInliner = new IGSInlinerAlternative(accumulator);
-        mapSetterToTheirLines = igsInliner.mapsSetterToTheirInlines;
-        List<Processor> processors = Arrays.asList(igsInliner, new AddNPGuard(accumulator));
 
-        IsoLauncher seqLauncher = new IsoLauncher(inputPath, processors, outputPath, accumulator);
+        IGSSimpleCapture igsSimpleCapture = new IGSSimpleCapture();
+        callToSimpleSetterToDelete = igsSimpleCapture.igsInvocation;
+        IGSInlinerSimple igsInliner = new IGSInlinerSimple(accumulator, igsSimpleCapture.igsInvocation);
+
+        //List<Processor> processors = Arrays.asList(igsSimpleCapture, new AddNPGuard(accumulator),igsInliner, new IGSInlinerSimplePostCondition(callToSimpleSetterToDelete));
+        List<Processor> processors = Arrays.asList(igsSimpleCapture,igsInliner,new AddNPGuard(accumulator), new IGSInlinerSimplePostCondition(callToSimpleSetterToDelete));
+
+        IsoLauncherSimpleIGS seqLauncher = new IsoLauncherSimpleIGS(inputPath, processors, outputPath, accumulator);
         seqLauncher.apply();
     }
 
-    IsoLauncher(String inputPath, List<Processor> processors, String outputPath, Accumulator accumulator) {
+    IsoLauncherSimpleIGS(String inputPath, List<Processor> processors, String outputPath, Accumulator accumulator) {
         this.inputPath = inputPath;
         this.outputPath = outputPath;
         this.processors = processors;
@@ -102,7 +105,8 @@ public class IsoLauncher {
             }
         }
 
-        spoon.getModel().processWith(new IGSInlinerAlternativePostCondition(mapSetterToTheirLines));
+        //spoon.getModel().processWith(new IGSInlinerAlternativePostCondition(mapSetterToTheirLines));
+        spoon.getModel().processWith(new IGSInlinerSimplePostCondition(callToSimpleSetterToDelete));
         spoon.prettyprint();
     }
 }

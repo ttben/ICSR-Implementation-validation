@@ -7,10 +7,7 @@ import spoon.reflect.reference.CtParameterReference;
 import spoon.reflect.visitor.filter.AbstractFilter;
 import spoon.support.reflect.declaration.CtMethodImpl;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.isAGetter;
 import static fr.cnrs.i3s.sparks.composition.android.conflicts.GetterSetterCriterion.usesLocalVariable;
@@ -18,51 +15,40 @@ import static fr.cnrs.i3s.sparks.composition.android.conflicts.MethodFilter.*;
 
 public class IGSInlinerSimple extends AbstractProcessor<CtClass> {
     private Accumulator accumulator;
-    private Map<CtExecutable, List<CtInvocation>> igsToInvocationsMap = new HashMap<>();
-    Map<CtClass, Map<CtExecutable, CtBlock>> mapsSetterToTheirInlines = new HashMap<>();
+    List<CtInvocation> igsInvocation = new ArrayList<>();
+    List<CtClass> targetClasses = new ArrayList<>();
 
-    public IGSInlinerSimple() {
-    }
-
-    public IGSInlinerSimple(Accumulator accumulator) {
+    public IGSInlinerSimple(Accumulator accumulator, List<CtInvocation> igsInvocation)  {
         this.accumulator = accumulator;
+        this.igsInvocation = igsInvocation;
+
     }
 
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-        //System.out.println("Starting analyse IGSInliner...");
-
-        List<CtInvocation> allMethodInvocations = getAllMethodInvocations(candidate);
-        List<CtInvocation> callsToInternalMethods = keepCallsToInternalMethods(allMethodInvocations, candidate);
-        List<CtInvocation> callsToGetterSetter = keepCallsToGetterSetter(callsToInternalMethods);
-
-        this.igsToInvocationsMap = buildInvocationsToModify(callsToGetterSetter);
-        //System.out.println("Over analyse IGSInliner.");
-
-        return !callsToGetterSetter.isEmpty();
+        for (CtInvocation invocation : igsInvocation) {
+            targetClasses.add(invocation.getParent(CtClass.class));
+        }
+        for (CtClass c : targetClasses) {
+            if (c == candidate) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public void process(CtClass clazz) {
-        for (Map.Entry<CtExecutable, List<CtInvocation>> entry : igsToInvocationsMap.entrySet()) {
-            CtExecutable getterOrSetterMethod = entry.getKey();
-
-            if (isAGetter(entry.getKey())) {
-                processGetter(entry, getterOrSetterMethod);
+        for (CtInvocation entry : igsInvocation) {
+            if (isAGetter(entry.getExecutable().getExecutableDeclaration())) {
+                // processGetter(entry, entry.getExecutable().getExecutableDeclaration());
             } else {
-                processSetter(clazz, entry, getterOrSetterMethod);
+                processSetter(entry, entry.getExecutable().getExecutableDeclaration());
             }
         }
     }
 
-    private void processSetter(CtClass clazz, Map.Entry<CtExecutable, List<CtInvocation>> entry, CtExecutable getterOrSetterMethod) {
-
-        Map<CtExecutable, CtBlock> mapsSetterToTheirInlines = new HashMap<>();
-        if (this.mapsSetterToTheirInlines.containsKey(clazz)) {
-            mapsSetterToTheirInlines = this.mapsSetterToTheirInlines.get(clazz);
-        }
-        mapsSetterToTheirInlines.put(entry.getKey(), entry.getKey().getBody().clone()); // save before clone copy
-        this.mapsSetterToTheirInlines.put(clazz, mapsSetterToTheirInlines);
+    private void processSetter(CtInvocation entry, CtExecutable getterOrSetterMethod) {
         getterOrSetterMethod = getterOrSetterMethod.clone();
 
         CtParameter parameter = (CtParameter) getterOrSetterMethod.getParameters().get(0);
@@ -74,31 +60,31 @@ public class IGSInlinerSimple extends AbstractProcessor<CtClass> {
         replaceInvocationByUpdatedSetterBody(entry, getterOrSetterMethod, newVariable);
     }
 
-    private void replaceInvocationByUpdatedSetterBody(Map.Entry<CtExecutable, List<CtInvocation>> entry, CtExecutable getterOrSetterMethod, CtVariable newVariable) {
+    private void replaceInvocationByUpdatedSetterBody(CtInvocation ctInvocation, CtExecutable getterOrSetterMethod, CtVariable newVariable) {
         //  For all call to the setter method, replace it by the updated body
-        for (CtInvocation ctInvocation : entry.getValue()) {
-            // initialize with the parameter passed during the initial set call
-            newVariable.setDefaultExpression((CtExpression) ctInvocation.getArguments().get(0));
 
-            // Add the variable to the body that will replace the call
-            CtStatementList newBlock = getFactory().createStatementList();
-            newBlock.setParent(ctInvocation.getParent());
+        // initialize with the parameter passed during the initial set call
+        newVariable.setDefaultExpression((CtExpression) ctInvocation.getArguments().get(0));
 
-            newBlock.addStatement((CtStatement) newVariable);
-            for (CtStatement s : getterOrSetterMethod.getBody().getStatements()) {
-                newBlock.addStatement(s);
-            }
+        // Add the variable to the body that will replace the call
+        CtStatementList newBlock = getFactory().createStatementList();
+        newBlock.setParent(ctInvocation.getParent());
 
-            if (accumulator == null) {
-                //normal calls:
-                ctInvocation.insertBefore((CtStatement) newVariable);
-
-                //  Effectively replace the call by the updated body
-                ctInvocation.replace(getterOrSetterMethod.getBody().getStatements());
-            } else {
-                accumulator.add(this, ctInvocation, newBlock);
-            }
+        newBlock.addStatement((CtStatement) newVariable);
+        for (CtStatement s : getterOrSetterMethod.getBody().getStatements()) {
+            newBlock.addStatement(s);
         }
+
+        if (accumulator == null) {
+            //normal calls:
+            ctInvocation.insertBefore((CtStatement) newVariable);
+
+            //  Effectively replace the call by the updated body
+            ctInvocation.replace(getterOrSetterMethod.getBody().getStatements());
+        } else {
+            accumulator.add(this, ctInvocation, newBlock);
+        }
+
     }
 
     private void modifyParameterNames(CtExecutable getterOrSetterMethod, CtParameter parameter, CtVariable newVariable) {

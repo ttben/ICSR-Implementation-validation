@@ -59,6 +59,18 @@ public class MethodFilter {
         return invocationsToGetterSetter;
     }
 
+    static List<CtInvocation> keepCallsToSimpleSetter(List<CtInvocation> invocations) {
+        List<CtInvocation> invocationsToGetterSetter = new ArrayList<>();
+        for (CtInvocation invocation : invocations) {
+            CtExecutableReference executableReference = invocation.getExecutable();
+
+            if (isASimpleSetter(executableReference.getExecutableDeclaration())) {
+                invocationsToGetterSetter.add(invocation);
+            }
+        }
+        return invocationsToGetterSetter;
+    }
+
     static List<CtMethod> keepSetters(List<CtMethod> methods) {
         List<CtMethod> setters = new ArrayList<>();
         for (CtMethod currentMethod : methods) {
@@ -69,16 +81,7 @@ public class MethodFilter {
         }
         return setters;
     }
-    static List<CtMethod> keepSimpleSetters(List<CtMethod> methods) {
-        List<CtMethod> setters = new ArrayList<>();
-        for (CtMethod currentMethod : methods) {
-            CtExecutableReference executableReference = currentMethod.getReference();
-            if (isASimpleSetter(executableReference.getExecutableDeclaration())) {
-                setters.add(currentMethod);
-            }
-        }
-        return setters;
-    }
+
 
     static List<CtInvocation> keepCallsToInternalMethods(List<CtInvocation> allMethodInvocations, CtClass ctClass) {
         List<CtInvocation> internalCalls = new ArrayList<>();
