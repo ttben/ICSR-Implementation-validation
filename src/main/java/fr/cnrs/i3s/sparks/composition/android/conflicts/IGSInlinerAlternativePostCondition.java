@@ -60,7 +60,7 @@ public class IGSInlinerAlternativePostCondition extends AbstractProcessor<CtClas
         if (error) {
             System.err.printf("> %d ERROR(s) found in class %s<\n", nbErrors, ctClass.getQualifiedName());
         } else {
-            System.out.println("Over processing PostCondition IGSInliner.");
+            System.out.println("Over processing PostCondition IGSInliner. No error found");
         }
     }
 }

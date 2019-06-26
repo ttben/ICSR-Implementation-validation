@@ -35,10 +35,6 @@ public class IGSInlinerSimple extends AbstractProcessor<CtClass> {
 
     @Override
     public boolean isToBeProcessed(CtClass candidate) {
-        if (candidate.getQualifiedName().contains("GooglePlusSynchronizer")) {
-            System.out.println();
-        }
-
         igsInvocationCopy = null;
         if (igsInvocation == null) {
             List<CtInvocation> allMethodInvocations = getAllMethodInvocations(candidate);
@@ -66,6 +62,7 @@ public class IGSInlinerSimple extends AbstractProcessor<CtClass> {
 
     @Override
     public void process(CtClass clazz) {
+        System.out.println("Processing " + clazz.getSimpleName());
         for (CtInvocation entry : igsInvocationCopy) {
             if (isAGetter(entry.getExecutable().getExecutableDeclaration())) {
                 // processGetter(entry, entry.getExecutable().getExecutableDeclaration());

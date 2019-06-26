@@ -14,7 +14,8 @@ public class SeqLauncher {
     private final List<Processor> processors;
 
     public static void main(String[] args) {
-        String inputPath = "/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/";
+//        String inputPath = "/Users/benjaminbenni/Downloads/runnerup-1844222ffb76494cd9673623956b2a1f92b92f45/app/src/org/runnerup/";
+        String inputPath = "/Users/bennibenjamin/Work/runnerup/app/src/org/runnerup";
         String outputPath = "";
         IGSInlinerAlternative igsInliner = null;
         List<Processor> processors = null;
@@ -24,6 +25,7 @@ public class SeqLauncher {
         IGSInlinerSimple igsSimpleInliner = null;
 
         // -- Traditional / simple IGS definition
+        System.out.printf("Traditional / simple IGS definition\n");
         outputPath = "target/spooned-seq-igsSimple-guard-checkIGS";
         capture = new IGSSimpleCapture();
         igsSimpleInliner = new IGSInlinerSimple();
@@ -46,7 +48,7 @@ public class SeqLauncher {
 
 
         // ---- Alternative definition of IGS:
-
+        System.out.println("Alternative definition of IGS\n");
         outputPath = "target/spooned-seq-igsAlternative-guard-checkIGS";
         igsInliner = new IGSInlinerAlternative();
         processors = Arrays.asList(igsInliner, new AddNPGuard(), new IGSInlinerAlternativePostCondition(igsInliner.mapsSetterToTheirInlines));
